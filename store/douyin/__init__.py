@@ -4,9 +4,8 @@
 # @Desc    :
 from typing import List
 
-import config
+from config.base_config import BaseConfig
 from var import source_keyword_var
-
 from .douyin_store_impl import *
 
 
@@ -19,7 +18,7 @@ class DouyinStoreFactory:
 
     @staticmethod
     def create_store() -> AbstractStore:
-        store_class = DouyinStoreFactory.STORES.get(config.SAVE_DATA_OPTION)
+        store_class = DouyinStoreFactory.STORES.get(BaseConfig.SAVE_DATA_OPTION)
         if not store_class:
             raise ValueError(
                 "[DouyinStoreFactory.create_store] Invalid save option only supported csv or db or json ...")

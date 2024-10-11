@@ -10,7 +10,7 @@ from typing import Any, List
 from redis import Redis
 
 from cache.abs_cache import AbstractCache
-from config import db_config
+from config.db_config import DBConfig
 
 
 class RedisCache(AbstractCache):
@@ -26,10 +26,10 @@ class RedisCache(AbstractCache):
         :return:
         """
         return Redis(
-            host=db_config.REDIS_DB_HOST,
-            port=db_config.REDIS_DB_PORT,
-            db=db_config.REDIS_DB_NUM,
-            password=db_config.REDIS_DB_PWD,
+            host=DBConfig.REDIS_DB_HOST,
+            port=DBConfig.REDIS_DB_PORT,
+            db=DBConfig.REDIS_DB_NUM,
+            password=DBConfig.REDIS_DB_PWD,
         )
 
     def get(self, key: str) -> Any:

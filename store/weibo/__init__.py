@@ -7,7 +7,6 @@ import re
 from typing import List
 
 from var import source_keyword_var
-
 from .weibo_store_image import *
 from .weibo_store_impl import *
 
@@ -21,7 +20,7 @@ class WeibostoreFactory:
 
     @staticmethod
     def create_store() -> AbstractStore:
-        store_class = WeibostoreFactory.STORES.get(config.SAVE_DATA_OPTION)
+        store_class = WeibostoreFactory.STORES.get(BaseConfig.SAVE_DATA_OPTION)
         if not store_class:
             raise ValueError(
                 "[WeibotoreFactory.create_store] Invalid save option only supported csv or db or json ...")

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from typing import List
 
-import config
 from base.base_crawler import AbstractStore
+from config.base_config import BaseConfig
 from model.m_zhihu import ZhihuComment, ZhihuContent
 from store.zhihu.zhihu_store_impl import (ZhihuCsvStoreImplement,
                                           ZhihuDbStoreImplement,
@@ -20,7 +20,7 @@ class ZhihuStoreFactory:
 
     @staticmethod
     def create_store() -> AbstractStore:
-        store_class = ZhihuStoreFactory.STORES.get(config.SAVE_DATA_OPTION)
+        store_class = ZhihuStoreFactory.STORES.get(BaseConfig.SAVE_DATA_OPTION)
         if not store_class:
             raise ValueError("[ZhihuStoreFactory.create_store] Invalid save option only supported csv or db or json ...")
         return store_class()

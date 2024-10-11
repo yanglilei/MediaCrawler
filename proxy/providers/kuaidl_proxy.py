@@ -9,6 +9,8 @@ from typing import Dict, List
 import httpx
 from pydantic import BaseModel, Field
 
+from tools.utils import ConfigFileReader
+from constants import Constants
 from proxy import IpCache, IpInfoModel, ProxyProvider
 from proxy.types import ProviderNameEnum
 from tools import utils
@@ -46,7 +48,7 @@ def parse_kuaidaili_proxy(proxy_info: str) -> KuaidailiProxyModel:
 
 
 class KuaiDaiLiProxy(ProxyProvider):
-    def __init__(self, kdl_user_name: str, kdl_user_pwd: str, kdl_secret_id: str, kdl_signature: str):
+    def __init__(self, kdl_user_name: str, kdl_user_pwd: str, kdl_secret_id: str, kdl_secret_key: str):
         """
 
         Args:
@@ -57,7 +59,7 @@ class KuaiDaiLiProxy(ProxyProvider):
         self.kdl_user_pwd = kdl_user_pwd
         self.api_base = "https://dps.kdlapi.com/"
         self.secret_id = kdl_secret_id
-        self.signature = kdl_signature
+        self.signature = kdl_secret_key
         self.ip_cache = IpCache()
         self.proxy_brand_name = ProviderNameEnum.KUAI_DAILI_PROVIDER.value
         self.params = {
@@ -127,8 +129,16 @@ def new_kuai_daili_proxy() -> KuaiDaiLiProxy:
 
     """
     return KuaiDaiLiProxy(
-        kdl_secret_id=os.getenv("kdl_secret_id", "你的快代理secert_id"),
-        kdl_signature=os.getenv("kdl_signature", "你的快代理签名"),
-        kdl_user_name=os.getenv("kdl_user_name", "你的快代理用户名"),
-        kdl_user_pwd=os.getenv("kdl_user_pwd", "你的快代理密码"),
+        # # 你的快代理secert_id
+        # kdl_secret_id=os.getenv("kdl_secret_id", "osdji6rxus3hel1o9tq3"),
+        # # 你的快代理签名
+        # kdl_secret_key=os.getenv("kdl_secret_key", "esq8gpm4nd4366rnzct4zdebgrxcc2q6"),
+        # # 你的快代理用户名
+        # kdl_user_name=os.getenv("kdl_user_name", "d2517365261"),
+        # # 你的快代理密码
+        # kdl_user_pwd=os.getenv("kdl_user_pwd", "ihthkyjq"),
+        kdl_secret_id = ConfigFileReader.get_val(Constants.ConfigFileKey.KDL_SECRET_ID),
+        kdl_secret_key = ConfigFileReader.get_val(Constants.ConfigFileKey.KDL_SECRET_KEY),
+        kdl_user_name = ConfigFileReader.get_val(Constants.ConfigFileKey.KDL_USER_NAME),
+        kdl_user_pwd = ConfigFileReader.get_val(Constants.ConfigFileKey.KDL_USER_PWD)
     )

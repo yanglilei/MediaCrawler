@@ -8,7 +8,7 @@ from typing import Dict, List
 import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed
 
-import config
+from config.base_config import BaseConfig
 from proxy.providers import new_jisu_http_proxy, new_kuai_daili_proxy
 from tools import utils
 
@@ -100,7 +100,7 @@ async def create_ip_pool(ip_pool_count: int, enable_validate_ip: bool) -> ProxyI
     """
     pool = ProxyIpPool(ip_pool_count=ip_pool_count,
                        enable_validate_ip=enable_validate_ip,
-                       ip_provider=IpProxyProvider.get(config.IP_PROXY_PROVIDER_NAME)
+                       ip_provider=IpProxyProvider.get(BaseConfig.IP_PROXY_PROVIDER_NAME)
                        )
     await pool.load_proxies()
     return pool

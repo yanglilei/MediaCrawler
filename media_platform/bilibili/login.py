@@ -12,8 +12,8 @@ from playwright.async_api import BrowserContext, Page
 from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
                       wait_fixed)
 
-import config
 from base.base_crawler import AbstractLogin
+from config.base_config import BaseConfig
 from tools import utils
 
 
@@ -25,7 +25,7 @@ class BilibiliLogin(AbstractLogin):
                  login_phone: Optional[str] = "",
                  cookie_str: str = ""
                  ):
-        config.LOGIN_TYPE = login_type
+        BaseConfig.LOGIN_TYPE = login_type
         self.browser_context = browser_context
         self.context_page = context_page
         self.login_phone = login_phone
@@ -34,11 +34,11 @@ class BilibiliLogin(AbstractLogin):
     async def begin(self):
         """Start login bilibili"""
         utils.logger.info("[BilibiliLogin.begin] Begin login Bilibili ...")
-        if config.LOGIN_TYPE == "qrcode":
+        if BaseConfig.LOGIN_TYPE == "qrcode":
             await self.login_by_qrcode()
-        elif config.LOGIN_TYPE == "phone":
+        elif BaseConfig.LOGIN_TYPE == "phone":
             await self.login_by_mobile()
-        elif config.LOGIN_TYPE == "cookie":
+        elif BaseConfig.LOGIN_TYPE == "cookie":
             await self.login_by_cookies()
         else:
             raise ValueError(

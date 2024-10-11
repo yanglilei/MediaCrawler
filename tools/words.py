@@ -8,18 +8,19 @@ import jieba
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 
-import config
+from config.base_config import BaseConfig
 from tools import utils
 
 plot_lock = asyncio.Lock()
 
+
 class AsyncWordCloudGenerator:
     def __init__(self):
         logging.getLogger('jieba').setLevel(logging.WARNING)
-        self.stop_words_file = config.STOP_WORDS_FILE
+        self.stop_words_file = BaseConfig.STOP_WORDS_FILE
         self.lock = asyncio.Lock()
         self.stop_words = self.load_stop_words()
-        self.custom_words = config.CUSTOM_WORDS
+        self.custom_words = BaseConfig.CUSTOM_WORDS
         for word, group in self.custom_words.items():
             jieba.add_word(word)
 
@@ -49,7 +50,7 @@ class AsyncWordCloudGenerator:
         top_20_word_freq = {word: freq for word, freq in
                             sorted(word_freq.items(), key=lambda item: item[1], reverse=True)[:20]}
         wordcloud = WordCloud(
-            font_path=config.FONT_PATH,
+            font_path=BaseConfig.FONT_PATH,
             width=800,
             height=400,
             background_color='white',

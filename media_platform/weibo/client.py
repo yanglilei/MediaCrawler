@@ -14,7 +14,7 @@ import httpx
 from httpx import Response
 from playwright.async_api import BrowserContext, Page
 
-import config
+from config.base_config import BaseConfig
 from tools import utils
 
 from .exception import DataFetchError
@@ -176,7 +176,7 @@ class WeiboClient:
         Returns:
 
         """
-        if not config.ENABLE_GET_SUB_COMMENTS:
+        if not BaseConfig.ENABLE_GET_SUB_COMMENTS:
             utils.logger.info(
                 f"[WeiboClient.get_comments_all_sub_comments] Crawling sub_comment mode is not enabled")
             return []

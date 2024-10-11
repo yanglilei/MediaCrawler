@@ -8,9 +8,10 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
                       wait_fixed)
 
-import config
 from base.base_crawler import AbstractLogin
 from cache.cache_factory import CacheFactory
+from config.base_config import BaseConfig
+from config.db_config import DBConfig
 from tools import utils
 
 
@@ -23,7 +24,7 @@ class DouYinLogin(AbstractLogin):
                  login_phone: Optional[str] = "",
                  cookie_str: Optional[str] = ""
                  ):
-        config.LOGIN_TYPE = login_type
+        BaseConfig.LOGIN_TYPE = login_type
         self.browser_context = browser_context
         self.context_page = context_page
         self.login_phone = login_phone
@@ -40,11 +41,11 @@ class DouYinLogin(AbstractLogin):
         await self.popup_login_dialog()
 
         # select login type
-        if config.LOGIN_TYPE == "qrcode":
+        if BaseConfig.LOGIN_TYPE == "qrcode":
             await self.login_by_qrcode()
-        elif config.LOGIN_TYPE == "phone":
+        elif BaseConfig.LOGIN_TYPE == "phone":
             await self.login_by_mobile()
-        elif config.LOGIN_TYPE == "cookie":
+        elif BaseConfig.LOGIN_TYPE == "cookie":
             await self.login_by_cookies()
         else:
             raise ValueError("[DouYinLogin.begin] Invalid Login Type Currently only supported qrcode or phone or cookie ...")
@@ -129,7 +130,7 @@ class DouYinLogin(AbstractLogin):
 
         # 检查是否有滑动验证码
         await self.check_page_display_slider(move_step=10, slider_level="easy")
-        cache_client = CacheFactory.create_cache(config.CACHE_TYPE_MEMORY)
+        cache_client = CacheFactory.create_cache(DBConfig.CACHE_TYPE_MEMORY)
         max_get_sms_code_time = 60 * 2  # 最长获取验证码的时间为2分钟
         while max_get_sms_code_time > 0:
             utils.logger.info(f"[DouYinLogin.login_by_mobile] get douyin sms code from redis remaining time {max_get_sms_code_time}s ...")

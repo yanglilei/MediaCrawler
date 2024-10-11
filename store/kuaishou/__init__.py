@@ -4,7 +4,6 @@
 # @Desc    :
 from typing import List
 
-import config
 from var import source_keyword_var
 
 from .kuaishou_store_impl import *
@@ -19,7 +18,7 @@ class KuaishouStoreFactory:
 
     @staticmethod
     def create_store() -> AbstractStore:
-        store_class = KuaishouStoreFactory.STORES.get(config.SAVE_DATA_OPTION)
+        store_class = KuaishouStoreFactory.STORES.get(BaseConfig.SAVE_DATA_OPTION)
         if not store_class:
             raise ValueError(
                 "[KuaishouStoreFactory.create_store] Invalid save option only supported csv or db or json ...")

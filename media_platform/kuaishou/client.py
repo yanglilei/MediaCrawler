@@ -7,8 +7,8 @@ from urllib.parse import urlencode
 import httpx
 from playwright.async_api import BrowserContext, Page
 
-import config
 from base.base_crawler import AbstractApiClient
+from config.base_config import BaseConfig
 from tools import utils
 
 from .exception import DataFetchError
@@ -224,7 +224,7 @@ class KuaiShouClient(AbstractApiClient):
         Returns:
 
         """
-        if not config.ENABLE_GET_SUB_COMMENTS:
+        if not BaseConfig.ENABLE_GET_SUB_COMMENTS:
             utils.logger.info(
                 f"[KuaiShouClient.get_comments_all_sub_comments] Crawling sub_comment mode is not enabled"
             )

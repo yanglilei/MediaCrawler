@@ -7,11 +7,10 @@ import json
 from abc import ABC, abstractmethod
 from typing import List
 
-import config
 from cache.abs_cache import AbstractCache
 from cache.cache_factory import CacheFactory
-from tools.utils import utils
-
+from config.db_config import DBConfig
+from tools import utils
 from .types import IpInfoModel
 
 
@@ -30,10 +29,9 @@ class ProxyProvider(ABC):
         raise NotImplementedError
 
 
-
 class IpCache:
     def __init__(self):
-        self.cache_client: AbstractCache = CacheFactory.create_cache(cache_type=config.CACHE_TYPE_MEMORY)
+        self.cache_client: AbstractCache = CacheFactory.create_cache(cache_type=DBConfig.CACHE_TYPE_MEMORY)
 
     def set_ip(self, ip_key: str, ip_value_info: str, ex: int):
         """

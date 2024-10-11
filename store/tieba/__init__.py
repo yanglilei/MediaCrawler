@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import List
 
+from config.base_config import BaseConfig
 from model.m_baidu_tieba import TiebaComment, TiebaCreator, TiebaNote
 from var import source_keyword_var
 
@@ -17,7 +18,7 @@ class TieBaStoreFactory:
 
     @staticmethod
     def create_store() -> AbstractStore:
-        store_class = TieBaStoreFactory.STORES.get(config.SAVE_DATA_OPTION)
+        store_class = TieBaStoreFactory.STORES.get(BaseConfig.SAVE_DATA_OPTION)
         if not store_class:
             raise ValueError(
                 "[TieBaStoreFactory.create_store] Invalid save option only supported csv or db or json ...")

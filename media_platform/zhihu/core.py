@@ -8,8 +8,8 @@ from typing import Dict, List, Optional, Tuple
 from playwright.async_api import (BrowserContext, BrowserType, Page,
                                   async_playwright)
 
-import config
 from base.base_crawler import AbstractCrawler
+from config.base_config import BaseConfig
 from model.m_zhihu import ZhihuContent
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import zhihu as zhihu_store
@@ -40,8 +40,8 @@ class ZhihuCrawler(AbstractCrawler):
 
         """
         playwright_proxy_format, httpx_proxy_format = None, None
-        if config.ENABLE_IP_PROXY:
-            ip_proxy_pool = await create_ip_pool(config.IP_PROXY_POOL_COUNT, enable_validate_ip=True)
+        if BaseConfig.ENABLE_IP_PROXY:
+            ip_proxy_pool = await create_ip_pool(BaseConfig.IP_PROXY_POOL_COUNT, enable_validate_ip=True)
             ip_proxy_info: IpInfoModel = await ip_proxy_pool.get_proxy()
             playwright_proxy_format, httpx_proxy_format = self.format_proxy_info(ip_proxy_info)
 
@@ -52,7 +52,7 @@ class ZhihuCrawler(AbstractCrawler):
                 chromium,
                 None,
                 self.user_agent,
-                headless=config.HEADLESS
+                headless=BaseConfig.HEADLESS
             )
             # stealth.min.js is a js script to prevent the website from detecting the crawler.
             await self.browser_context.add_init_script(path="libs/stealth.min.js")
@@ -64,23 +64,23 @@ class ZhihuCrawler(AbstractCrawler):
             self.zhihu_client = await self.create_zhihu_client(httpx_proxy_format)
             if not await self.zhihu_client.pong():
                 login_obj = ZhiHuLogin(
-                    login_type=config.LOGIN_TYPE,
+                    login_type=BaseConfig.LOGIN_TYPE,
                     login_phone="",  # input your phone number
                     browser_context=self.browser_context,
                     context_page=self.context_page,
-                    cookie_str=config.COOKIES
+                    cookie_str=BaseConfig.COOKIES
                 )
                 await login_obj.begin()
                 await self.zhihu_client.update_cookies(browser_context=self.browser_context)
 
-            crawler_type_var.set(config.CRAWLER_TYPE)
-            if config.CRAWLER_TYPE == "search":
+            crawler_type_var.set(BaseConfig.CRAWLER_TYPE)
+            if BaseConfig.CRAWLER_TYPE == "search":
                 # Search for notes and retrieve their comment information.
                 await self.search()
-            elif config.CRAWLER_TYPE == "detail":
+            elif BaseConfig.CRAWLER_TYPE == "detail":
                 # Get the information and comments of the specified post
                 raise NotImplementedError
-            elif config.CRAWLER_TYPE == "creator":
+            elif BaseConfig.CRAWLER_TYPE == "creator":
                 # Get creator's information and their notes and comments
                 raise NotImplementedError
             else:
@@ -92,14 +92,14 @@ class ZhihuCrawler(AbstractCrawler):
         """Search for notes and retrieve their comment information."""
         utils.logger.info("[ZhihuCrawler.search] Begin search zhihu keywords")
         zhihu_limit_count = 20  # zhihu limit page fixed value
-        if config.CRAWLER_MAX_NOTES_COUNT < zhihu_limit_count:
-            config.CRAWLER_MAX_NOTES_COUNT = zhihu_limit_count
-        start_page = config.START_PAGE
-        for keyword in config.KEYWORDS.split(","):
+        if BaseConfig.CRAWLER_MAX_NOTES_COUNT < zhihu_limit_count:
+            BaseConfig.CRAWLER_MAX_NOTES_COUNT = zhihu_limit_count
+        start_page = BaseConfig.START_PAGE
+        for keyword in BaseConfig.KEYWORDS.split(","):
             source_keyword_var.set(keyword)
             utils.logger.info(f"[ZhihuCrawler.search] Current search keyword: {keyword}")
             page = 1
-            while (page - start_page + 1) * zhihu_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
+            while (page - start_page + 1) * zhihu_limit_count <= BaseConfig.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
                     utils.logger.info(f"[ZhihuCrawler.search] Skip page {page}")
                     page += 1
@@ -134,11 +134,11 @@ class ZhihuCrawler(AbstractCrawler):
         Returns:
 
         """
-        if not config.ENABLE_GET_COMMENTS:
+        if not BaseConfig.ENABLE_GET_COMMENTS:
             utils.logger.info(f"[ZhihuCrawler.batch_get_content_comments] Crawling comment mode is not enabled")
             return
 
-        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        semaphore = asyncio.Semaphore(BaseConfig.MAX_CONCURRENCY_NUM)
         task_list: List[Task] = []
         for content_item in content_list:
             task = asyncio.create_task(self.get_comments(content_item, semaphore), name=content_item.content_id)
@@ -208,11 +208,11 @@ class ZhihuCrawler(AbstractCrawler):
     ) -> BrowserContext:
         """Launch browser and create browser context"""
         utils.logger.info("[ZhihuCrawler.launch_browser] Begin create browser context ...")
-        if config.SAVE_LOGIN_STATE:
+        if BaseConfig.SAVE_LOGIN_STATE:
             # feat issue #14
             # we will save login state to avoid login every time
             user_data_dir = os.path.join(os.getcwd(), "browser_data",
-                                         config.USER_DATA_DIR % config.PLATFORM)  # type: ignore
+                                         BaseConfig.USER_DATA_DIR % BaseConfig.PLATFORM)  # type: ignore
             browser_context = await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 accept_downloads=True,

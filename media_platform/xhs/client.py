@@ -8,8 +8,8 @@ import httpx
 from playwright.async_api import BrowserContext, Page
 from tenacity import retry, stop_after_attempt, wait_fixed
 
-import config
 from base.base_crawler import AbstractApiClient
+from config.base_config import BaseConfig
 from tools import utils
 
 from .exception import DataFetchError, IPBlockError
@@ -146,7 +146,7 @@ class XiaoHongShuClient(AbstractApiClient):
 
         """
         """get a note to check if login state is ok"""
-        utils.logger.info("[XiaoHongShuClient.pong] Begin to pong xhs...")
+        # utils.logger.info("[XiaoHongShuClient.pong] Begin to pong xhs...")
         ping_flag = False
         try:
             note_card: Dict = await self.get_note_by_keyword(keyword="小红书")
@@ -313,7 +313,7 @@ class XiaoHongShuClient(AbstractApiClient):
         Returns:
         
         """
-        if not config.ENABLE_GET_SUB_COMMENTS:
+        if not BaseConfig.ENABLE_GET_SUB_COMMENTS:
             utils.logger.info(
                 f"[XiaoHongShuCrawler.get_comments_all_sub_comments] Crawling sub_comment mode is not enabled")
             return []

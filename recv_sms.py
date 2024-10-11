@@ -4,15 +4,14 @@ from typing import List
 import uvicorn
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
-
-import config
+from config.db_config import DBConfig
 from cache.abs_cache import AbstractCache
 from cache.cache_factory import CacheFactory
 from tools import utils
 
 app = FastAPI()
 
-cache_client : AbstractCache = CacheFactory.create_cache(cache_type=config.CACHE_TYPE_MEMORY)
+cache_client : AbstractCache = CacheFactory.create_cache(cache_type=DBConfig.CACHE_TYPE_MEMORY)
 
 
 class SmsNotification(BaseModel):

@@ -8,8 +8,8 @@ import httpx
 from playwright.async_api import BrowserContext, Page
 from tenacity import retry, stop_after_attempt, wait_fixed
 
-import config
 from base.base_crawler import AbstractApiClient
+from config.base_config import BaseConfig
 from constant import zhihu as zhihu_constant
 from model.m_zhihu import ZhihuComment, ZhihuContent
 from tools import utils
@@ -288,7 +288,7 @@ class ZhiHuClient(AbstractApiClient):
         Returns:
 
         """
-        if not config.ENABLE_GET_SUB_COMMENTS:
+        if not BaseConfig.ENABLE_GET_SUB_COMMENTS:
             return []
 
         all_sub_comments: List[ZhihuComment] = []

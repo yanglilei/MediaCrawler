@@ -7,8 +7,8 @@ import httpx
 from playwright.async_api import BrowserContext
 from tenacity import RetryError, retry, stop_after_attempt, wait_fixed
 
-import config
 from base.base_crawler import AbstractApiClient
+from config.base_config import BaseConfig
 from model.m_baidu_tieba import TiebaComment, TiebaCreator, TiebaNote
 from proxy.proxy_ip_pool import ProxyIpPool
 from tools import utils
@@ -238,7 +238,7 @@ class BaiduTieBaClient(AbstractApiClient):
 
         """
         uri = "/p/comment"
-        if not config.ENABLE_GET_SUB_COMMENTS:
+        if not BaseConfig.ENABLE_GET_SUB_COMMENTS:
             return []
 
         # # 贴吧获取所有子评论需要登录态

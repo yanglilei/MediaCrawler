@@ -7,9 +7,10 @@ from playwright.async_api import BrowserContext, Page
 from tenacity import (RetryError, retry, retry_if_result, stop_after_attempt,
                       wait_fixed)
 
-import config
 from base.base_crawler import AbstractLogin
 from cache.cache_factory import CacheFactory
+from config.base_config import BaseConfig
+from config.db_config import DBConfig
 from tools import utils
 
 
@@ -22,7 +23,7 @@ class XiaoHongShuLogin(AbstractLogin):
                  login_phone: Optional[str] = "",
                  cookie_str: str = ""
                  ):
-        config.LOGIN_TYPE = login_type
+        BaseConfig.LOGIN_TYPE = login_type
         self.browser_context = browser_context
         self.context_page = context_page
         self.login_phone = login_phone
@@ -49,11 +50,11 @@ class XiaoHongShuLogin(AbstractLogin):
     async def begin(self):
         """Start login xiaohongshu"""
         utils.logger.info("[XiaoHongShuLogin.begin] Begin login xiaohongshu ...")
-        if config.LOGIN_TYPE == "qrcode":
+        if BaseConfig.LOGIN_TYPE == "qrcode":
             await self.login_by_qrcode()
-        elif config.LOGIN_TYPE == "phone":
+        elif BaseConfig.LOGIN_TYPE == "phone":
             await self.login_by_mobile()
-        elif config.LOGIN_TYPE == "cookie":
+        elif BaseConfig.LOGIN_TYPE == "cookie":
             await self.login_by_cookies()
         else:
             raise ValueError("[XiaoHongShuLogin.begin]I nvalid Login Type Currently only supported qrcode or phone or cookies ...")
@@ -89,7 +90,7 @@ class XiaoHongShuLogin(AbstractLogin):
         await send_btn_ele.click()  # 点击发送验证码
         sms_code_input_ele = await login_container_ele.query_selector("label.auth-code > input")
         submit_btn_ele = await login_container_ele.query_selector("div.input-container > button")
-        cache_client = CacheFactory.create_cache(config.CACHE_TYPE_MEMORY)
+        cache_client = CacheFactory.create_cache(DBConfig.CACHE_TYPE_MEMORY)
         max_get_sms_code_time = 60 * 2  # 最长获取验证码的时间为2分钟
         no_logged_in_session = ""
         while max_get_sms_code_time > 0:

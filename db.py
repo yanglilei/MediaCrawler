@@ -4,18 +4,19 @@
 # @Desc    : mediacrawler db 管理
 import asyncio
 from typing import Dict
-from urllib.parse import urlparse
 
 import aiofiles
 import aiomysql
 
-import config
 from async_db import AsyncMysqlDB
+from config.db_config import DBConfig
+from tools.utils import ConfigFileReader
+from constants import Constants
 from tools import utils
 from var import db_conn_pool_var, media_crawler_db_var
 
 
-def parse_mysql_url(mysql_url) -> Dict:
+def parse_mysql_url(mysql_url="") -> Dict:
     """
     从配置文件中解析db链接url，给到aiomysql用，因为aiomysql不支持直接以URL的方式传递链接信息。
     Args:
@@ -24,15 +25,25 @@ def parse_mysql_url(mysql_url) -> Dict:
     Returns:
 
     """
-    parsed_url = urlparse(mysql_url)
-    db_params = {
-        'host': parsed_url.hostname,
-        'port': parsed_url.port or 3306,
-        'user': parsed_url.username,
-        'password': parsed_url.password,
-        'db': parsed_url.path.lstrip('/')
-    }
-    return db_params
+    # parsed_url = urlparse(mysql_url)
+    # db_params = {
+    #     'host': parsed_url.hostname,
+    #     'port': parsed_url.port or 3306,
+    #     'user': parsed_url.username,
+    #     'password': parsed_url.password,
+    #     'db': parsed_url.path.lstrip('/')
+    # }
+
+    # 这么写，兼容media crawler配置文件的写法
+    DBConfig.RELATION_DB_HOST = ConfigFileReader.get_val(Constants.ConfigFileKey.DM2L_HOST)
+    DBConfig.RELATION_DB_PORT = ConfigFileReader.get_val(Constants.ConfigFileKey.DM2L_PORT)
+    DBConfig.RELATION_DB_USER = ConfigFileReader.get_val(Constants.ConfigFileKey.DM2L_USER)
+    DBConfig.RELATION_DB_PWD = ConfigFileReader.get_val(Constants.ConfigFileKey.DM2L_PASSWORD)
+    DBConfig.RELATION_DB_NAME = ConfigFileReader.get_val(Constants.ConfigFileKey.DM2L_DATABASE)
+
+    return {"host": DBConfig.RELATION_DB_HOST, "port": int(DBConfig.RELATION_DB_PORT), "user": DBConfig.RELATION_DB_USER,
+            "password": DBConfig.RELATION_DB_PWD, "db": DBConfig.RELATION_DB_NAME,
+            "charset": ConfigFileReader.get_val(Constants.ConfigFileKey.DM2L_CHARSET)}
 
 
 async def init_mediacrawler_db():
@@ -41,7 +52,8 @@ async def init_mediacrawler_db():
     Returns:
 
     """
-    db_conn_params = parse_mysql_url(config.RELATION_DB_URL)
+    # db_conn_params = parse_mysql_url(DBConfig.RELATION_DB_URL)
+    db_conn_params = parse_mysql_url()
     pool = await aiomysql.create_pool(
         autocommit=True,
         **db_conn_params
@@ -59,9 +71,9 @@ async def init_db():
     Returns:
 
     """
-    utils.logger.info("[init_db] start init mediacrawler db connect object")
+    # utils.logger.info("[init_db] start init mediacrawler db connect object")
     await init_mediacrawler_db()
-    utils.logger.info("[init_db] end init mediacrawler db connect object")
+    # utils.logger.info("[init_db] end init mediacrawler db connect object")
 
 
 async def close():
@@ -70,7 +82,7 @@ async def close():
     Returns:
 
     """
-    utils.logger.info("[close] close mediacrawler db pool")
+    # utils.logger.info("[close] close mediacrawler db pool")
     db_pool: aiomysql.Pool = db_conn_pool_var.get()
     if db_pool is not None:
         db_pool.close()

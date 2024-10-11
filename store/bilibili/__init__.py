@@ -5,7 +5,7 @@
 
 from typing import List
 
-import config
+from config.base_config import BaseConfig
 from var import source_keyword_var
 
 from .bilibili_store_impl import *
@@ -21,7 +21,7 @@ class BiliStoreFactory:
 
     @staticmethod
     def create_store() -> AbstractStore:
-        store_class = BiliStoreFactory.STORES.get(config.SAVE_DATA_OPTION)
+        store_class = BiliStoreFactory.STORES.get(BaseConfig.SAVE_DATA_OPTION)
         if not store_class:
             raise ValueError(
                 "[BiliStoreFactory.create_store] Invalid save option only supported csv or db or json ...")

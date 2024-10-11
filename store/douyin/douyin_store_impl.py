@@ -11,8 +11,8 @@ from typing import Dict
 
 import aiofiles
 
-import config
 from base.base_crawler import AbstractStore
+from config.base_config import BaseConfig
 from tools import utils, words
 from var import crawler_type_var
 
@@ -208,7 +208,7 @@ class DouyinJsonStoreImplement(AbstractStore):
             async with aiofiles.open(save_file_name, 'w', encoding='utf-8') as file:
                 await file.write(json.dumps(save_data, ensure_ascii=False))
 
-            if config.ENABLE_GET_COMMENTS and config.ENABLE_GET_WORDCLOUD:
+            if BaseConfig.ENABLE_GET_COMMENTS and BaseConfig.ENABLE_GET_WORDCLOUD:
                 try:
                     await self.WordCloud.generate_word_frequency_and_cloud(save_data, words_file_name_prefix)
                 except:

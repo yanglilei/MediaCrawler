@@ -2,23 +2,20 @@ import asyncio
 import os
 import random
 from asyncio import Task
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
-from playwright.async_api import (BrowserContext, BrowserType, Page,
-                                  async_playwright)
+from playwright.async_api import (BrowserContext, BrowserType, Page)
 
-import config
 from base.base_crawler import AbstractCrawler
+from config.base_config import BaseConfig
 from model.m_baidu_tieba import TiebaCreator, TiebaNote
 from proxy.proxy_ip_pool import IpInfoModel, create_ip_pool
 from store import tieba as tieba_store
 from tools import utils
 from tools.crawler_util import format_proxy_info
 from var import crawler_type_var, source_keyword_var
-
 from .client import BaiduTieBaClient
 from .field import SearchNoteType, SearchSortType
-from .login import BaiduTieBaLogin
 
 
 class TieBaCrawler(AbstractCrawler):
@@ -37,9 +34,9 @@ class TieBaCrawler(AbstractCrawler):
 
         """
         ip_proxy_pool, httpx_proxy_format = None, None
-        if config.ENABLE_IP_PROXY:
+        if BaseConfig.ENABLE_IP_PROXY:
             utils.logger.info("[BaiduTieBaCrawler.start] Begin create ip proxy pool ...")
-            ip_proxy_pool = await create_ip_pool(config.IP_PROXY_POOL_COUNT, enable_validate_ip=True)
+            ip_proxy_pool = await create_ip_pool(BaseConfig.IP_PROXY_POOL_COUNT, enable_validate_ip=True)
             ip_proxy_info: IpInfoModel = await ip_proxy_pool.get_proxy()
             _, httpx_proxy_format = format_proxy_info(ip_proxy_info)
             utils.logger.info(f"[BaiduTieBaCrawler.start] Init default ip proxy, value: {httpx_proxy_format}")
@@ -49,15 +46,15 @@ class TieBaCrawler(AbstractCrawler):
             ip_pool=ip_proxy_pool,
             default_ip_proxy=httpx_proxy_format,
         )
-        crawler_type_var.set(config.CRAWLER_TYPE)
-        if config.CRAWLER_TYPE == "search":
+        crawler_type_var.set(BaseConfig.CRAWLER_TYPE)
+        if BaseConfig.CRAWLER_TYPE == "search":
             # Search for notes and retrieve their comment information.
             await self.search()
             await self.get_specified_tieba_notes()
-        elif config.CRAWLER_TYPE == "detail":
+        elif BaseConfig.CRAWLER_TYPE == "detail":
             # Get the information and comments of the specified post
             await self.get_specified_notes()
-        elif config.CRAWLER_TYPE == "creator":
+        elif BaseConfig.CRAWLER_TYPE == "creator":
             # Get creator's information and their notes and comments
             await self.get_creators_and_notes()
         else:
@@ -73,14 +70,14 @@ class TieBaCrawler(AbstractCrawler):
         """
         utils.logger.info("[BaiduTieBaCrawler.search] Begin search baidu tieba keywords")
         tieba_limit_count = 10  # tieba limit page fixed value
-        if config.CRAWLER_MAX_NOTES_COUNT < tieba_limit_count:
-            config.CRAWLER_MAX_NOTES_COUNT = tieba_limit_count
-        start_page = config.START_PAGE
-        for keyword in config.KEYWORDS.split(","):
+        if BaseConfig.CRAWLER_MAX_NOTES_COUNT < tieba_limit_count:
+            BaseConfig.CRAWLER_MAX_NOTES_COUNT = tieba_limit_count
+        start_page = BaseConfig.START_PAGE
+        for keyword in BaseConfig.KEYWORDS.split(","):
             source_keyword_var.set(keyword)
             utils.logger.info(f"[BaiduTieBaCrawler.search] Current search keyword: {keyword}")
             page = 1
-            while (page - start_page + 1) * tieba_limit_count <= config.CRAWLER_MAX_NOTES_COUNT:
+            while (page - start_page + 1) * tieba_limit_count <= BaseConfig.CRAWLER_MAX_NOTES_COUNT:
                 if page < start_page:
                     utils.logger.info(f"[BaiduTieBaCrawler.search] Skip page {page}")
                     page += 1
@@ -112,13 +109,13 @@ class TieBaCrawler(AbstractCrawler):
 
         """
         tieba_limit_count = 50
-        if config.CRAWLER_MAX_NOTES_COUNT < tieba_limit_count:
-            config.CRAWLER_MAX_NOTES_COUNT = tieba_limit_count
-        for tieba_name in config.TIEBA_NAME_LIST:
+        if BaseConfig.CRAWLER_MAX_NOTES_COUNT < tieba_limit_count:
+            BaseConfig.CRAWLER_MAX_NOTES_COUNT = tieba_limit_count
+        for tieba_name in BaseConfig.TIEBA_NAME_LIST:
             utils.logger.info(
                 f"[BaiduTieBaCrawler.get_specified_tieba_notes] Begin get tieba name: {tieba_name}")
             page_number = 0
-            while page_number <= config.CRAWLER_MAX_NOTES_COUNT:
+            while page_number <= BaseConfig.CRAWLER_MAX_NOTES_COUNT:
                 note_list: List[TiebaNote] = await self.tieba_client.get_notes_by_tieba_name(
                     tieba_name=tieba_name,
                     page_num=page_number
@@ -133,7 +130,7 @@ class TieBaCrawler(AbstractCrawler):
                 await self.get_specified_notes([note.note_id for note in note_list])
                 page_number += tieba_limit_count
 
-    async def get_specified_notes(self, note_id_list: List[str] = config.TIEBA_SPECIFIED_ID_LIST):
+    async def get_specified_notes(self, note_id_list: List[str] = BaseConfig.TIEBA_SPECIFIED_ID_LIST):
         """
         Get the information and comments of the specified post
         Args:
@@ -142,7 +139,7 @@ class TieBaCrawler(AbstractCrawler):
         Returns:
 
         """
-        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        semaphore = asyncio.Semaphore(BaseConfig.MAX_CONCURRENCY_NUM)
         task_list = [
             self.get_note_detail_async_task(note_id=note_id, semaphore=semaphore) for note_id in note_id_list
         ]
@@ -190,10 +187,10 @@ class TieBaCrawler(AbstractCrawler):
         Returns:
 
         """
-        if not config.ENABLE_GET_COMMENTS:
+        if not BaseConfig.ENABLE_GET_COMMENTS:
             return
 
-        semaphore = asyncio.Semaphore(config.MAX_CONCURRENCY_NUM)
+        semaphore = asyncio.Semaphore(BaseConfig.MAX_CONCURRENCY_NUM)
         task_list: List[Task] = []
         for note_detail in note_detail_list:
             task = asyncio.create_task(self.get_comments_async_task(note_detail, semaphore), name=note_detail.note_id)
@@ -225,7 +222,7 @@ class TieBaCrawler(AbstractCrawler):
 
         """
         utils.logger.info("[WeiboCrawler.get_creators_and_notes] Begin get weibo creators")
-        for creator_url in config.TIEBA_CREATOR_URL_LIST:
+        for creator_url in BaseConfig.TIEBA_CREATOR_URL_LIST:
             creator_info: TiebaCreator = await self.tieba_client.get_creator_info_by_url(creator_url=creator_url)
             if creator_info:
                 utils.logger.info(f"[WeiboCrawler.get_creators_and_notes] creator info: {creator_info}")
@@ -239,7 +236,7 @@ class TieBaCrawler(AbstractCrawler):
                     user_name=creator_info.user_name,
                     crawl_interval=0,
                     callback=tieba_store.batch_update_tieba_notes,
-                    max_note_count=config.CRAWLER_MAX_NOTES_COUNT
+                    max_note_count=BaseConfig.CRAWLER_MAX_NOTES_COUNT
                 )
 
                 await self.batch_get_note_comments(all_notes_list)
@@ -267,11 +264,11 @@ class TieBaCrawler(AbstractCrawler):
 
         """
         utils.logger.info("[BaiduTieBaCrawler.launch_browser] Begin create browser context ...")
-        if config.SAVE_LOGIN_STATE:
+        if BaseConfig.SAVE_LOGIN_STATE:
             # feat issue #14
             # we will save login state to avoid login every time
             user_data_dir = os.path.join(os.getcwd(), "browser_data",
-                                         config.USER_DATA_DIR % config.PLATFORM)  # type: ignore
+                                         BaseConfig.USER_DATA_DIR % BaseConfig.PLATFORM)  # type: ignore
             browser_context = await chromium.launch_persistent_context(
                 user_data_dir=user_data_dir,
                 accept_downloads=True,

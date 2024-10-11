@@ -4,9 +4,8 @@
 # @Desc    :
 from typing import List
 
-import config
+from config.base_config import BaseConfig
 from var import source_keyword_var
-
 from . import xhs_store_impl
 from .xhs_store_image import *
 from .xhs_store_impl import *
@@ -21,7 +20,7 @@ class XhsStoreFactory:
 
     @staticmethod
     def create_store() -> AbstractStore:
-        store_class = XhsStoreFactory.STORES.get(config.SAVE_DATA_OPTION)
+        store_class = XhsStoreFactory.STORES.get(BaseConfig.SAVE_DATA_OPTION)
         if not store_class:
             raise ValueError("[XhsStoreFactory.create_store] Invalid save option only supported csv or db or json ...")
         return store_class()
@@ -97,7 +96,8 @@ async def update_xhs_note(note_item: Dict):
         "note_url": f"https://www.xiaohongshu.com/explore/{note_id}?xsec_token={note_item.get('xsec_token')}&xsec_source=pc_search",
         "source_keyword": source_keyword_var.get(),
     }
-    utils.logger.info(f"[store.xhs.update_xhs_note] xhs note: {local_db_item}")
+    # utils.logger.info(f"[store.xhs.update_xhs_note] xhs note: {local_db_item}")
+    # utils.logger.info(f"获取xhs笔记成功，note：{local_db_item.get('note_id')}")
     await XhsStoreFactory.create_store().store_content(local_db_item)
 
 
